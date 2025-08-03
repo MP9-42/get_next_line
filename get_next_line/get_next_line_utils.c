@@ -6,74 +6,104 @@
 /*   By: MP9 <mikjimen@student.42heilbronn.de>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/26 14:47:14 by MP9               #+#    #+#             */
-/*   Updated: 2025/07/30 19:07:17 by MP9              ###   ########.fr       */
+/*   Updated: 2025/08/03 14:06:15 by MP9              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-char	*ft_strlcpy(char *dst, const char *src, size_t dstsize)
+size_t	ft_strlen(const char *s)
 {
 	size_t	i;
 
 	i = 0;
-	if (dstsize <= 0)
+	while (s[i])
+		i++;
+	return (i);
+}
+
+char	*ft_strchr(const char *s, int c)
+{
+	size_t	i;
+
+	i = 0;
+	while (s[i] != '\0' && s[i] != (char)c)
+		i++;
+	if (s[i] == (char)c)
+		return ((char *)&s[i]);
+	return (NULL);
+}
+
+char	*ft_strjoin(char const *s1, char const *s2)
+{
+	char	*joinstr;
+	size_t	i;
+	size_t	i2;
+
+	i = 0;
+	i2 = 0;
+	joinstr = (char *)malloc(sizeof(char) * ft_strlen(s1) + ft_strlen(s2) + 1);
+	if (!joinstr)
 		return (NULL);
-	while (src[i] != '\0' && i < dstsize)
+	while (s1[i] != '\0')
 	{
-		dst[i] = src[i];
+		joinstr[i] = s1[i];
 		i++;
 	}
-	return (dst);
+	while (s2[i2] != '\0')
+	{
+		joinstr[i] = s2[i2];
+		i++;
+		i2++;
+	}
+	joinstr[i] = '\0';
+	return (joinstr);
 }
 
-char	*text_to_str(int fd)
+char	*ft_strdup(const char *s1)
+{
+	char	*s2;
+	size_t	slen;
+
+	slen = ft_strlen(s1);
+	s2 = (char *)malloc(sizeof(char) * slen + 1);
+	if (!s2)
+		return (NULL);
+	while (*s1)
+	{
+		*s2 = *(char *)s1;
+		s1++;
+		s2++;
+	}
+	*s2 = '\0';
+	return (s2 - slen);
+}
+
+char	*ft_substr(char const *s, unsigned int start, size_t len)
 {
 	char	*str;
-	char	*buffer;
-	ssize_t	text;
-	ssize_t	tlen;
+	size_t	i;
+	size_t	i2;
+	size_t	i3;
 
-	text = read(fd, buffer, BUFFER_SIZE);
-	tlen = count_mem(fd);
-	str = (char *)ft_calloc(sizeof(char) * (tlen + 1));
+	if (!s)
+		return (NULL);
+	i = 0;
+	i2 = ft_strlen(s);
+	i3 = 0;
+	if (i2 > start)
+	{
+		while (s[start + i] != '\0' && i < len)
+			i++;
+	}
+	str = (char *)malloc(i + 1);
 	if (!str)
 		return (NULL);
-	while (read(fd, buffer, BUFFER_SIZE) != 0)
+	while (i3 < i && i != 0)
 	{
-		ft_strlcpy(str, buffer, BUFFER_SIZE);
-		str++;
-		text++;
+		str[i3] = s[start + i3];
+		i3++;
 	}
+	str[i3] = '\0';
 	return (str);
 }
-
-static size_t	count_mem(int fd)
-{
-	char	*buffer;
-	ssize_t	text;
-
-	text = read(fd, buffer, BUFFER_SIZE);
-	while (read(fd, buffer, BUFFER_SIZE) != 0)
-		text++;
-	return (text);
-}
-
-static char	*one_word(const char *s, char c, size_t	*i)
-{
-	char	*word;
-	size_t	start;
-
-	start = 0;
-	while (s[*i] == c)
-		(*i)++;
-	start = *i;
-	while (s[*i] != c && s[*i] != '\0')
-		(*i)++;
-	word = (char *)malloc(sizeof(char) * (*i - start + 1));
-	if (!word)
-		return (NULL);
-	ft_strlcpy(word, s + start, *i - start + 1);
-	return (word);
-}
-
