@@ -6,7 +6,7 @@
 /*   By: MP9 <mikjimen@student.42heilbronn.de>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/26 14:46:45 by MP9               #+#    #+#             */
-/*   Updated: 2025/08/03 14:47:52 by MP9              ###   ########.fr       */
+/*   Updated: 2025/08/07 19:23:13 by MP9              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,56 +31,95 @@ void	*ft_memcpy(void *dst, const void *src, size_t n)
 	return (dst);
 }
 
-static char	*make_line(char *line)
+static char	*join_line(int fd, char *buf, char *line)
 {
-	size_t	i;
+	int		n;
+	char	*tmp;
+
+	n = 1;
+	while (!ft_strchr(buf, '\n') && n > 0)
+	{
+		n = read(fd, buf, BUFFER_SIZE);
+		if (n < 0)
+			return (ft_memcpy(buf, "\0", 1), free(line), NULL);
+		buf[n] = '\0';
+		tmp = ft_strjoin(line, buf);
+		free(line);
+		if (!tmp)
+			return (NULL);
+		line = tmp;
+	}
+	return (line);
+}
+
+static char	*cut_line(char *str)
+{
+	int	i;
 
 	i = 0;
-	while (line[i] != '\0' && line[i] != '\n')
+	while (str[i] != '\0' && str[i] != '\n')
 		i++;
-	if (line[i] == '\n')
-		return (ft_substr(line, 0, i + 1));
+	if (str[i] == '\n')
+		return (ft_substr(str, 0, i + 1));
 	else
-		return (ft_strdup(line));
+		return (ft_strdup(str));
 }
 
-static char	*ft_read(int fd, char *buffer, char *line, int *b_read)
+static void	clean_buf(char *buf)
 {
-	char	*temp;
-
-	
-}
-
-static void	buffer_clean(char *buffer)
-{
-	size_t	i;
+	int		i;
+	char	*nl;
 
 	i = 0;
-	while (buffer[i] != '\0' && buffer[i] != '\n')
+	while (buf[i] && buf[i] != '\n')
 		i++;
-	if (buffer[i] == '\n')
-		ft_memcpy(buffer, ft_strchr(buffer, '\n') + 1,
-			ft_strlen(ft_strchr(buffer, '\n')));
+	if (buf[i] == '\n')
+	{
+		nl = ft_strchr(buf, '\n');
+		if (nl)
+			ft_memcpy(buf, nl + 1, ft_strlen(nl));
+	}
 }
 
 char	*get_next_line(int fd)
 {
-	static char	buffer[BUFFER_SIZE + 1];
-	int			b_read;
+	static char	buf[BUFFER_SIZE + 1];
 	char		*line;
-	char		*temp;
+	char		*result;
 
-	b_read = 1;
 	if (fd < 0 || BUFFER_SIZE <= 0)
-		return (ft_memcpy(buffer, "\0", 1), NULL);
-	line = ft_strdup(buffer);
+		return (ft_memcpy(buf, "\0", 1), NULL);
+	line = ft_strdup(buf);
 	if (!line)
 		return (NULL);
-	line = ft_read(fd, buffer, line, &b_read);
-	if (!line)
-		return (NULL);
-	if (ft_strlen(line) == 0 && b_read == 0)
+	line = join_line(fd, buf, line);
+	if (!*line)
 		return (free(line), NULL);
-	temp = make_line(line);
-	return (buffer_clean(buffer), free(line), temp);
+	result = cut_line(line);
+	clean_buf(buf);
+	free(line);
+	return (result);
 }
+
+// int main(void)
+// {
+// 	int		fd;
+// 	char	*line;
+// 	int		i;
+
+// 	printf("BUFFER_SIZE = %d\n", BUFFER_SIZE);
+// 	fd = open("text.txt", O_RDONLY);
+// 	if (fd < 0)
+// 	{
+// 		perror("open");
+// 		return (1);
+// 	}
+// 	i = 1;
+// 	while ((line = get_next_line(fd)))
+// 	{
+// 		printf("line %d: %s", i++, line);
+// 		free(line);
+// 	}
+// 	close(fd);
+// 	return (0);
+// }
